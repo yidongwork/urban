@@ -1,0 +1,482 @@
+ <!DOCTYPE html>
+  <html>  
+  <head> 
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7, IE=9, IE=10">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+      on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title></title>
+
+	<link rel="stylesheet" href="js/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/js/dojo/dijit/themes/claro/claro.css">    
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/js/esri/css/esri.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    
+    <style>
+
+	</style>
+    
+    <style type="text/css">
+        @import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojox/layout/resources/FloatingPane.css";
+        @import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojox/layout/resources/ResizeHandle.css";
+    </style>
+    
+    <script src="js/dojo/dojo.js"
+        djConfig="parseOnLoad: true">
+    </script>
+    
+    <script>var dojoConfig = { parseOnLoad: true };</script>
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/draw.js"></script>
+    <script src="js/edit.js"></script>
+    <script>
+	require([
+	         "dojo/_base/window", 
+	         "dojo/store/Memory",
+	         "dojox/layout/FloatingPane",
+	         "dijit/tree/ObjectStoreModel",  
+	         "dijit/form/Button",
+	     	"dojo/store/Observable",
+	     	"dojo/ready",
+	     	"dijit/tree/dndSource",
+	     	"dijit/registry",
+	     	"cbtree/Tree", 
+	     	"dijit/Dialog",
+	     	"dijit/layout/BorderContainer",
+	     	"dijit/layout/ContentPane",
+	     	"dijit/TitlePane",
+	     	"dijit/MenuBar",
+	     	"dijit/MenuBarItem",
+	     	"dijit/Menu",
+	     	"dijit/MenuItem",
+	     	"dijit/PopupMenuBarItem",
+	     	"dijit/PopupMenuItem",
+	     	"dojo/data/ItemFileWriteStore",
+	     	
+	     	"cbtree/model/TreeStoreModel",
+	     	"cbtree/store/Hierarchy",
+	         "dojo/domReady!","dojo/parser"
+	     ], function(
+	    		 win, 
+	    		 Memory, 
+	    		 FloatingPane, 
+	    		 ObjectStoreModel, 
+	    		 Button, 
+	    		 Observable, 
+	    		 ready, 
+	    		 dndSource, 
+	    		 registry, 
+	    		 Tree, 
+	    		 Dialog,
+	    		 ObjectStoreModel,
+	     		 ObjectStore){
+		
+	});
+      //dojo.require("dijit.layout.BorderContainer");
+      //dojo.require("dijit.layout.ContentPane");
+      //dojo.require("dijit.TitlePane");
+      //dojo.require("dijit.MenuBar");
+      //dojo.require("dijit.MenuBarItem");
+      //dojo.require("dijit.PopupMenuBarItem");
+      //dojo.require("dijit.Menu");
+      //dojo.require("dijit.MenuItem");
+      //dojo.require("dijit.PopupMenuItem");
+      //dojo.require("dojox.layout.FloatingPane");
+      //dojo.require("dijit.form.Button");
+      //dojo.require("dojo.data.ItemFileReadStore");
+      //dojo.require("dijit.Tree");
+      
+      dojo.require("esri.map");
+      dojo.require("esri.virtualearth.VETiledLayer");      
+      dojo.require("esri.dijit.BasemapGallery");
+      dojo.require("esri.arcgis.utils");
+      
+      dojo.require("esri.toolbars.navigation");
+      dojo.require("esri.toolbars.draw");
+      dojo.require("esri.dijit.Print");
+      dojo.require("esri.dijit.Legend");
+      dojo.require("esri.layers.FeatureLayer");
+      dojo.require("esri.tasks.GenerateRendererTask");
+      dojo.require("esri.tasks.PrintTask");
+      
+      var pFloatingPane,pFloatingPane2;
+      
+      var map, toolbar, symbol, geomTask;
+      
+      var printTask;
+
+      function init() {
+        var initExtent = new esri.geometry.Extent({"xmin":-11727455,"ymin":4861652,"xmax":-11706340,"ymax":4871512,"spatialReference":{"wkid":102100}});
+        map = new esri.Map("map", {
+          basemap: "topo",
+          center: [-78, 43],
+          zoom: 8,
+          navigationMode:'css-transform',
+          sliderStyle:'large',
+          nav:true
+        });
+        
+        var infoTemplate = new esri.InfoTemplate();
+        infoTemplate.setTitle("Population in ${NAME}");
+        infoTemplate.setContent( "<b>2007: </b>${POP2007:compare}<br/>"
+                             + "<b>2007 density: </b>${POP07_SQMI:compare}<br/><br/>"
+                             + "<b>2000: </b>${POP2000:NumberFormat}<br/>"
+                             + "<b>2000 density: </b>${POP00_SQMI:NumberFormat}");
+        
+        
+        //var basemap = new esri.layers.FeatureLayer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/3",{
+        //	id:'Boundry',
+        //	infoTemplate:infoTemplate,
+        //   outFields:["NAME", "POP2000", "POP2007", "POP00_SQMI", "POP07_SQMI"]
+        //});
+        
+        var layer1 = new esri.layers.FeatureLayer("http://services1.arcgis.com/npLnRW3gAaK3foIj/ArcGIS/rest/services/WesternNY/FeatureServer/0",{
+        	id:'Buffalo',
+        	infoTemplate:infoTemplate,
+            outFields:["NAME", "POP2000", "POP2007", "POP00_SQMI", "POP07_SQMI"]
+        });
+        
+        //layer1.setRenderer(new SimpleRenderer(null));
+		var layer = new esri.layers.ArcGISDynamicMapServiceLayer("http://gis-srv.caset.buffalo.edu:6080/arcgis/rest/services/ErieNiagaraMap_July9/MapServer",{
+			id:'Boundry',
+        	//infoTemplate:infoTemplate,
+            //outFields:["NAME", "POP2000", "POP2007", "POP00_SQMI", "POP07_SQMI"]
+		});
+		var layer0 = new esri.layers.FeatureLayer("http://gis-srv.caset.buffalo.edu:6080/arcgis/rest/services/ErieNiagaraMap_July9/MapServer",{
+			id:'Boundry Feature',
+        	infoTemplate:infoTemplate,
+            outFields:["NAME", "POP2000", "POP2007", "POP00_SQMI", "POP07_SQMI"]
+		});
+        
+		var url ='http://servicesbeta4.esri.com/arcgis/rest/services/Utilities/ExportWebMap/GPServer/Export Web Map Task';
+		printTask = new esri.tasks.PrintTask(url);
+        
+        //http://gis-srv.caset.buffalo.edu:6080/arcgis/rest/services/ErieNiagaraMap_July9/MapServer
+        //map.addLayer(basemap);
+        map.addLayer(layer);
+        map.addLayer(layer1);
+        map.addLayer(layer0);
+        
+        //http://gis-srv.caset.buffalo.edu:6080/arcgis/rest/services/ErieNiagaraMap_July9/MapServer/0
+        
+        dojo.connect(map, "onLoad", createToolbar);
+        dojo.connect(map, "onLoad", createLegend);
+        dojo.connect(printTask,'onComplete',function(result){
+        	alert("complete printing");
+        	window.open(result.url);
+        	});
+        
+        //registerDrawButtons();
+     	// loop through all dijits, connect onClick event
+        // listeners for buttons to activate drawing tools
+        //dijit.registry.forEach(function(d) {
+          // d is a reference to a dijit
+          // could be a layout container or a button
+        //  var className = $('.myclass').attr('class');
+          //if ( d.declaredClass === "dijit.form.Button" ) {
+          //  d.on("click", activateTool);
+          //}
+        //});
+
+        //add the basemap gallery, in this case we'll display maps from ArcGIS.com including bing maps
+        var basemapGallery = new esri.dijit.BasemapGallery({
+          showArcGISBasemaps: true,
+          map: map
+        }, "basemapGallery");
+        basemapGallery.startup();
+        
+        //var navToolbar=new esri.toolbars.Navigation(map);
+        
+        //toolbar draw
+        var toolbar=new esri.toolbars.Draw(map, {
+        	showTooltips:true
+        });
+        
+        //dojo.connect(toolbar, "onDrawEnd",addToMap);
+        
+        
+        dojo.connect(basemapGallery, "onError", function(msg) {console.log(msg)});
+        
+        //0803
+        //dojo.connect(map,"onLoad",showAlert(map.width))
+      }
+      dojo.ready(init);
+      
+      //dojo menu
+       var pMenu;
+       var pMenuBar;
+       
+       dojo.addOnLoad(function() {
+       	
+       	//menubar
+       	pMenuBar = new dijit.MenuBar({});
+
+        var pSubMenu = new dijit.Menu({});
+        pSubMenu.addChild(new dijit.MenuItem({
+        	//iconSrc: "icon/DoBox.ico",
+        	id:"ContentMenuItem",
+            label: "Map Content",
+            iconClass: "contentIcon",
+            onClick:function(){
+            	pFloatingPane.show();
+            }
+        }));
+        pSubMenu.addChild(new dijit.MenuItem({
+        	id:"LayerMenuItem",
+            label: "Layer Style",
+            iconClass: "layerStyleIcon",
+            onClick:function(){
+            	createLegend();
+            	pFloatingPane2.show();
+            	
+            }
+        }));
+        pMenuBar.addChild(new dijit.PopupMenuBarItem({
+            label: "Map",
+            popup: pSubMenu
+        }));
+
+        var pDrawSubMenu = new dijit.Menu();
+        pDrawSubMenu.addChild(new dijit.MenuItem({
+            label: "Point",
+            onClick:function(){
+            	activateTool("Point");
+            }
+        }));
+        pDrawSubMenu.addChild(new dijit.MenuItem({
+            label: "Line",
+            onClick:function(){
+            	activateTool("Line");
+            }
+        }));
+        pDrawSubMenu.addChild(new dijit.MenuItem({
+            label: "polygon",
+            onClick:function(){
+            	activateTool("Polygon");s
+            }
+        }));
+        
+        var pEditSubMenu = new dijit.Menu();
+        pEditSubMenu.addChild(new dijit.MenuItem({
+            label: "Move",
+            onClick:function(){
+            	alert('not functional')
+            }
+        }));
+        pEditSubMenu.addChild(new dijit.MenuItem({
+            label: "Scale",
+            onClick: function() {
+                alert('not functional')
+            }
+        }));
+        pEditSubMenu.addChild(new dijit.MenuItem({
+            label: "Rotate",
+            onClick: function() {
+                alert('not functional')
+            }
+        }));
+
+        var pSubMenu2 = new dijit.Menu({
+        	
+        });
+        //pSubMenu2.addChild(new dijit.MenuItem({
+        //    label: "Draw"
+        //}));
+        pSubMenu2.addChild(new dijit.PopupMenuItem({
+        	iconClass:"contentIcon",
+        	label:"Draw",
+        	popup: pDrawSubMenu
+        }));
+        pSubMenu2.addChild(new dijit.PopupMenuItem({
+        	//id: "editSubMenu",
+            label: "Edit",
+            //iconCLass:"contentIcon",
+            popup: pEditSubMenu
+        }));
+        
+        var pPrintSubMenu = new dijit.Menu({});
+        pPrintSubMenu.addChild(new dijit.MenuItem({
+        	label:"Print",	//"<div id='ppp'></div>"
+        	onClick: function(){
+        		var params = new esri.tasks.PrintParameters();
+        		params.map = map;
+				alert("execute printing");
+        		printTask.execute(params);
+        	}
+        }));
+
+        pMenuBar.addChild(new dijit.PopupMenuBarItem({
+
+            label: "Edit",
+            iconClass:"contentIcon",
+        	showTitle:false,
+            popup: pSubMenu2
+        }));
+        //dijit_MenuItem_8
+        pMenuBar.addChild(new dijit.PopupMenuBarItem({
+        	label:"Print",
+        	popup: pPrintSubMenu
+        }));
+
+        //print
+        //var printer = new esri.dijit.Print({
+        //    map: map,
+        //    url: "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+        //  }, dojo.byId("ppp"));
+        //printer.startup();
+
+        
+        pMenuBar.placeAt("menuwrapper");
+        pMenuBar.startup();
+        
+      //menu
+        pMenu = new dijit.Menu({
+            targetNodeIds: ["pFloatingPane"]
+        });
+        pMenu.addChild(new dijit.MenuItem({
+            label: "Globe",
+            onClick: function() {
+                alert('not functional')
+            }
+        }));
+        pMenu.addChild(new dijit.MenuItem({
+            label: "ZoomIn",
+            //disabled: true
+            onClick: function() {
+                alert('not functional')
+            }
+        }));
+        pMenu.addChild(new dijit.MenuItem({
+            label: "ZoomOut",
+            //iconClass: "dijitEditorIcon dijitEditorIconCut",
+            onClick: function() {
+                alert('not functional')
+            }
+        }));
+        //pMenu.addChild(new dijit.CheckedMenuItem({
+        //    label: "checkable menu item"
+        //}));
+        //pMenu.addChild(new dijit.MenuSeparator());
+
+        //var pSubMenu = new dijit.Menu();
+        //pSubMenu.addChild(new dijit.MenuItem({
+        //    label: "Submenu item"
+        //}));
+        //pSubMenu.addChild(new dijit.MenuItem({
+        //    label: "Submenu item"
+        //}));
+        //pMenu.addChild(new dijit.PopupMenuItem({
+        //    label: "Submenu",
+        //    popup: pSubMenu
+        //}));
+
+        pMenu.startup();
+        
+        //floating pane
+        pFloatingPane = new dojox.layout.FloatingPane({
+            title: "Table of Content",
+            resizable: true,
+            dockable: true,
+            style: "position:absolute;top:200px;left:200px;width:200px;height:300px;visibility:hidden;z-Index:999;",
+            id: "pFloatingPane"
+        },"pFloatingPane");
+
+        pFloatingPane.startup();
+        
+        //floating pane2 legend
+        pFloatingPane2 = new dojox.layout.FloatingPane({
+            title: "Layer legend",
+            resizable: true,
+            dockable: true,
+            style: "position:absolute;top:200px;left:200px;width:200px;height:300px;visibility:hidden;z-Index:998;",
+            id: "pFloatingPane2"
+        },"pFloatingPane2");
+
+        pFloatingPane2.startup();
+        
+        //tree
+        var store = new dojo.data.ItemFileReadStore({
+            url: "json/countries.json"
+        });
+
+        var treeModel = new dijit.tree.ForestStoreModel({
+            store: store,
+            query: {
+                "type": "continent"
+            },
+            rootId: "root",
+            rootLabel: "Continents",
+            childrenAttrs: ["children"]
+        });
+
+        new dijit.Tree({
+            model: treeModel
+        },
+        "treeOne");
+    });
+    </script> 
+  </head> 
+
+  <body class="claro"> 
+    <div data-dojo-type="dijit.layout.BorderContainer" 
+         data-dojo-props="design:'headline', gutters:false" 
+         style="width:100%;height:100%;margin:0;">
+   
+
+      <div id="map" 
+           data-dojo-type="dijit.layout.ContentPane" 
+           data-dojo-props="region:'center'" 
+           style="padding:0;">
+           
+            <div data-dojo-id="myExternalDialog" data-dojo-type="dijit/Dialog" title="My external dialog"
+		        href="" style="width:600px;height:500px;padding: 0px;border-radius:10px;">
+		        <iframe src="https://docs.google.com/forms/d/1hzA3HbxbFUAO3dkwC9FUVBZ2_FXPxi2IgbDMYRQA1-c/viewform?edit_requested=true" style="width:580px;height:440px;padding: 0px;margin:0px;overflow: auto;"></iframe> 
+			</div>
+           
+            <div id="pFloatingPane">
+            	<div id="treeOne">
+        		</div>
+            </div>
+            
+            <div id="pFloatingPane2">
+            	<div id="LegendDiv">
+        		</div>
+            </div>
+            
+<!--             <button data-dojo-type="dijit.form.Button" class="EditButton" title="wer">Point</button> -->
+<!--             <button data-dojo-type="dijit.form.Button" class="EditButton" value="Line">Line</button> -->
+            
+			
+			<div id="logoDiv">    
+			<a id="logo" href="http://www.oneregionforward.org">
+				<!--[if lte IE 8]><img src="image/logo.png" alt="One Region Forward"><![endif]-->
+				
+				<!--[if gt IE 8]><img src="image/logo.svg" alt="One Region Forward"><![endif]-->
+				
+				<!--[if !IE]> -->
+				<img class="logoImg" alt="One Region Forward" src="image/logo.svg"></img>
+				  <!-- <![endif]-->
+			</a>
+			</div>
+
+	       <div style="position:absolute; right:20px; top:10px; z-Index:999; width: 380px;">
+	         <div id="UpperRightCorner">
+		         <div id="menuwrapper" style="position:float; width: 380px;">
+		       	 </div>
+		         <div class="UpperRightCornerPane" data-dojo-type="dijit.TitlePane" style="position:absolute;top:32px;width:380px;z-Index:999;"
+		         	data-dojo-props="title:'Switch Basemap', closable:false,  open:false">
+		            <div data-dojo-type="dijit.layout.ContentPane" style="width:380px; height:280px; overflow:auto;">
+		            <div id="basemapGallery" ></div></div>
+		         </div>
+	         </div>
+	       </div>
+
+      </div>
+    </div>
+  </body> 
+
+  </html>
