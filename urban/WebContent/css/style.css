@@ -1,0 +1,108 @@
+@CHARSET "US-ASCII";
+
+#holder
+{
+	float: right;
+	width: 400px;
+}
+
+#menuwrapper
+{
+	float: right;
+	width: 400px;
+}
+
+.logoImg
+{
+	width:50%;
+	/*height:auto;*/
+}
+
+#logoDiv
+{
+	/*background-color: #ffff00;*/
+	position:absolute; 
+	left:55px; 
+	top:10px; 
+	z-Index:999;
+}
+
+html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+      
+#map{
+	padding:0;
+}
+
+/*icons*/
+    .contentIcon {
+        background: url("../icon/6.bmp");
+        width: 16px;
+        height: 16px;
+    }
+    .layerStyleIcon
+    {
+    	background: url("../icon/explode.bmp");
+    	width:16px;
+    	height:16px;
+    }
+    
+    .mapToolIcon{
+    	background:url("../image/i_globe.png");
+    	width:34px;
+    	height:34px;
+    }
+    .editToolIcon{
+    	background:url("../image/i_draw.png");
+    	width:40px;
+    	height:40px;
+    }
+    .printToolIcon{
+    	background:url("../image/i_print.png");
+    	width:40px;
+    	height:40px;
+    }
+    .feedbackToolIcon{
+    	background:url("../image/i_table.png");
+    	width:40px;
+    	height:40px;
+    }
+    .DrawMenuIcon{
+    	background:url("../image/i_thematic.png");
+    	width:16px;
+    	height:16px;
+    }
+    .PointMenuIcon{
+    	background:url("../image/edit_markertool.png");
+    	width:16px;
+    	height:16px;
+    }
+    .PolylineMenuIcon{
+    	background:url("../image/edit_linetool.png");
+    	width:16px;
+    	height:16px;
+    }
+    .PolygonMenuIcon{
+    	background:url("../image/edit_polygontool.png");
+    	width:16px;
+    	height:16px;
+    }
+    .EditMenuIcon{
+    	background:url("../icon/MAIL12.ico");
+    	width:16px;
+    	height:16px;
+    }
+    .MoveMenuIcon{
+    	background:url("../icon/Icons/edit/move.bmp");
+    	width:16px;
+    	height:16px;
+    }
+    .ScaleMenuIcon{
+    	background:url("../icon/Icons/edit/stretch.bmp");
+    	width:16px;
+    	height:16px;
+    }
+    .RotateMenuIcon{
+    	background:url("../icon/Icons/edit/rotate.bmp");
+    	width:16px;
+    	height:16px;
+    }

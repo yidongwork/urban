@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html >
+<head>
+
+	<link rel="stylesheet" href="js/dijit/themes/claro/claro.css">
+	
+	<script>dojoConfig = {parseOnLoad: true}</script>
+	<script src='js/dojo/dojo.js'></script>
+	
+	<script>
+	require([
+         "dojo/_base/window", 
+         "dojo/store/Memory",
+         "dojox/layout/FloatingPane",
+         "dijit/tree/ObjectStoreModel", 
+         "dijit/Tree", 
+         "dijit/form/Button",
+     	"dojo/store/Observable",
+     	"dojo/ready",
+     	"dijit/tree/dndSource",
+     	"dijit/registry",
+     	"cbtree/Tree",
+     	"cbtree/model/TreeStoreModel",
+     	"cbtree/store/Hierarchy",
+         "dojo/domReady!","dojo/parser", "dijit/form/Button", "dijit/Dialog"
+     ], function(win, Memory, FloatingPane, ObjectStoreModel, Tree, Button, Observable, ready, dndSource, registry, Tree, ObjectStoreModel,
+     		ObjectStore){});
+	</script>
+</head>
+<body class="claro">
+    <div data-dojo-id="myExternalDialog" data-dojo-type="dijit/Dialog" title="My external dialog"
+        href="" style="width:600px;height:500px;padding: 0px;border-radius:10px;">
+        <iframe src="https://docs.google.com/forms/d/1hzA3HbxbFUAO3dkwC9FUVBZ2_FXPxi2IgbDMYRQA1-c/viewform?edit_requested=true" style="width:580px;height:440px;padding: 0px;margin:0px;overflow: auto;"></iframe> 
+	</div>
+
+<p>When pressing this button the dialog will popup loading the dialog content using an XHR call.</p>
+<button data-dojo-type="dijit/form/Button" onClick="myExternalDialog.show();" type="button">Show me!</button>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7, IE=9, IE=10">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Simple Map</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.6/js/dojo/dijit/themes/claro/claro.css"> 
+    <link rel="stylesheet" href="http://js.arcgis.com/3.6/js/esri/css/esri.css">
+      
+    <!-- <link rel="stylesheet" href="js/dijit/themes/claro/claro.css"> -->
+	
+	<link rel="stylesheet" href="css/style.css">
+	
+    <style>
+      html, body, #map {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: #ffff00;
+        overflow: hidden;
+        font-family: "Trebuchet MS";
+      }
+      #toolbar
+      {
+      	background-color: transparent;
+      	position:absolute;
+      	
+      }
+      
+      .dijitDialogPaneContent {
+	    width: 600px !important;
+	    height: 500px !important;
+	    border-radius:10px;
+	  }
+	  
+	  #dijit_Dialog_0
+	  {
+	  	border-radius:10px;
+	  }
+    </style>
+    
+    <script src="http://js.arcgis.com/3.6/"></script>
+    
+	<!-- <script>dojoConfig = {async: true, parseOnLoad: true}</script> -->
+	
+
+    <script>
+      var map;
+
+      require(["esri/map",
+               "esri/dijit/BasemapGallery",
+               "esri/arcgis/utils",
+               "dijit/Toolbar", 
+               "dijit/form/Button",
+               "dojo/parser",
+               
+               "dijit/Dialog",
+               "dijit/TitlePane",
+               "dojo/dom",
+               
+               "dojo/domReady!",
+
+ 
+               "dijit/form/DropDownButton", 
+               "dijit/ColorPalette", 
+               "dijit/TooltipDialog", 
+               "dijit/form/TextBox",
+               "dijit/layout/BorderContainer", 
+               "dijit/layout/ContentPane", 
+
+               ], 
+               function(Map,
+            		   BasemapGallery,
+            		   arcgisUtils,
+            		   Toolbar, 
+            		   Button,
+            		   parser,
+            		   Dialog,
+            		   TitlePane,
+            		   dom) {
+    	  
+        map = new Map("map", {
+          basemap: "topo",
+          center: [-122.45,37.75], // long, lat
+          zoom: 13,
+          sliderStyle: "small"
+        });
+        
+        //basemapGallery
+        var basemapGallery = new BasemapGallery({
+          showArcGISBasemaps: true,
+          map: map
+        }, "basemapGallery");
+        basemapGallery.startup();
+        
+        basemapGallery.on("error", function(msg) {
+          console.log("basemap gallery error:  ", msg);
+        });
+
+        //basemapGallery pane
+        //var tp = new TitlePane({title:"I'm a TitlePane", content: "Collapse me!"});
+        //dom.byId("holder").appendChild(tp.domNode);
+        //tp.startup();
+
+        
+        //feedback dialog
+        //myDialog = new Dialog({
+	    //    title: "My Dialog",
+	    //    content: "<iframe src='https://docs.google.com/forms/d/1hzA3HbxbFUAO3dkwC9FUVBZ2_FXPxi2IgbDMYRQA1-c/viewform?edit_requested=true' style='width:580px;height:440px;padding: 0px;margin:0px;overflow: auto;'></iframe>",
+	    //    style: "width: 600px"
+	    //});
+        
+        //toolbar
+        var toolbar = new Toolbar({}, "toolbar");
+        //map tool
+        var button = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Map",
+            showLabel: false,
+            iconClass: "mapToolIcon"
+        });
+        toolbar.addChild(button);
+        
+        //var button1 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+        //    label: "Map",
+        //    showLabel: false,
+        //    iconClass: "mapToolIcon"
+        //});
+        //toolbar.addChild(button1);
+
+        var button2 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Edit",
+            showLabel: false,
+            iconClass: "editToolIcon"
+        });
+        toolbar.addChild(button2);
+
+        var button3 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Print",
+            showLabel: false,
+            iconClass: "printToolIcon"
+        });
+        toolbar.addChild(button3);
+        
+        var button4 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Feedback",
+            showLabel: false,
+            iconClass: "feedbackToolIcon",
+            onClick: function(){
+                // Do something:
+            	myDialog.show();
+            }
+        });
+        toolbar.addChild(button4);
+        
+        var button5 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "test",
+            showLabel: false,
+            iconClass: "feedbackToolIcon",
+            onClick:function(){
+            	
+            }
+
+        });
+        toolbar.addChild(button5);
+      });
+    </script>
+  </head>
+
+  <body class="claro">
+    <div id="map">
+    
+        <div id="fancy">
+	     	<div data-dojo-type="dijit/Dialog" data-dojo-id="myDialog" style="width:600px;height:500px;padding: 0px;border-radius:10px;">
+	    		<iframe src="https://docs.google.com/forms/d/1hzA3HbxbFUAO3dkwC9FUVBZ2_FXPxi2IgbDMYRQA1-c/viewform?edit_requested=true" style="width:580px;height:440px;padding: 0px;margin:0px;overflow: auto;"></iframe>
+	    	
+	    	</div>
+	    	
+		</div>
+		
+		<div id="logoDiv">    
+			<a id="logo" href="http://www.oneregionforward.org">
+				<!--[if lte IE 8]><img src="image/logo.png" alt="One Region Forward"><![endif]-->
+				
+				<!--[if gt IE 8]><img src="image/logo.svg" alt="One Region Forward"><![endif]-->
+				
+				<!--[if !IE]> -->
+				<img class="logoImg" alt="One Region Forward" src="image/logo.svg"></img>
+				  <!-- <![endif]-->
+			</a>
+		</div>
+		
+		
+    	<div style="position:absolute; right:20px; top:10px; z-Index:999; width: 380px;">
+	         <div id="UpperRightCorner">
+		         <div id="menuwrapper" style="position:float; width: 380px;">
+		         	<span id="toolbar"></span>
+		       	 </div>
+		         <div id="holder">
+		         </div>
+	         </div>
+	       </div>
+    </div>
+  </body>
+</html> 
