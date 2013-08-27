@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+  <html>  
+  <head> 
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7, IE=9, IE=10">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+      on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title></title>
+
+    <link rel="stylesheet" href="http://js.arcgis.com/3.6/js/dojo/dijit/themes/claro/claro.css">    
+    <link rel="stylesheet" href="http://js.arcgis.com/3.6/js/esri/css/esri.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style> 
+        @import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojox/layout/resources/FloatingPane.css";
+        @import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojox/layout/resources/ResizeHandle.css";
+        
+        @import "js/cbtree/themes/claro/claro.css";
+    
+      html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+      #map{
+        padding:0;
+      }
+      
+      #fancy
+      {
+      	background-color: transparent;
+      	position:absolute;
+      	
+      }
+      
+      .dijitDialogPaneContent {
+	    width: 600px !important;
+	    height: 500px !important;
+	    //border-radius:10px;
+	  }
+	  
+	  #dijit_Dialog_0
+	  {
+	  	border-radius:10px;
+	  }
+	  
+      
+    </style>
+    
+    <script type="text/javascript">
+			var dojoConfig = {
+						async: true,
+						parseOnLoad: true,
+						isDebug: true,
+						baseUrl:"js/",
+						packages: [
+							{ name: "dojo",	location: "dojo" },
+							{ name: "dijit", location: "dijit" },
+							{ name: "cbtree",location: "cbtree" },
+							{ name: "dojox",location:"dojox"},
+							{ name: "esri",location:"esri"}
+						]
+			};
+	</script>
+    <script src="js/dojo/dojo.js"></script> 
+    <!-- <script src="http://js.arcgis.com/3.6/"></script> -->
+    <script> 
+      var map;
+      
+	  var pFloatingPane,pFloatingPane2;
+      
+      var map, toolbar, symbol, geomTask;
+      
+      var printTask;
+      
+      require(["esri/map",
+               "esri/dijit/BasemapGallery",
+               "esri/arcgis/utils",
+               "esri/layers/FeatureLayer",
+               "esri/dijit/Legend",
+               
+               "dijit/Toolbar", 
+               "dijit/form/Button",
+               "dojo/parser",
+               "dojo/_base/array",
+               
+               "dijit/Dialog",
+               "dijit/TitlePane",
+               "dojo/dom",
+               
+               "dojo/_base/window", 
+  	           "dojo/store/Memory",
+  	           "dojox/layout/FloatingPane",
+  	           "dijit/tree/ObjectStoreModel",
+  	           "dijit/Tree",
+  	     	   "dojo/store/Observable",
+  	     	   "dojo/ready",
+  	     	   "dijit/tree/dndSource",
+  	     	   "dijit/registry",
+  	     	   "dojo/data/ItemFileWriteStore",
+  	     	   
+  	     	   "cbtree/Tree", 
+  	     	   "cbtree/model/TreeStoreModel",
+  	     	   "cbtree/store/Hierarchy",
+  	     	   
+  	     	   "dijit/layout/BorderContainer",
+  	     	   "dijit/layout/ContentPane",
+  	     	   "dijit/TitlePane",
+  	     	   "dojo/data/ItemFileWriteStore",
+  	     	
+  	     	   
+  	     	   
+               
+               "dojo/domReady!",
+
+ 
+               "dijit/form/DropDownButton", 
+               "dijit/ColorPalette", 
+               "dijit/TooltipDialog", 
+               "dijit/form/TextBox",
+               "dijit/layout/BorderContainer", 
+               "dijit/layout/ContentPane", 
+               
+                
+               "dijit/DropDownMenu", 
+               "dijit/MenuItem", 
+               "dijit/MenuSeparator", 
+               "dijit/PopupMenuItem"
+
+               ], 
+               function(Map,
+            		   BasemapGallery,
+            		   arcgisUtils,
+            		   FeatureLayer,
+            		   Legend,
+            		   
+            		   Toolbar, 
+            		   Button,
+            		   parser,
+            		   arrayUtils,
+
+            		   Dialog,
+            		   TitlePane,
+            		   dom,
+            		   
+            		   win, 
+      	    		   Memory, 
+      	    		   FloatingPane, 
+      	    		   ObjectStoreModel, 
+      	    		   Tree,
+      	    		   Observable, 
+      	    		   ready, 
+      	    		   dndSource, 
+      	    		   registry,
+      	    		   ItemFileWriteStore,
+      	    		   
+      	    		   Tree, 
+      	    		   ObjectStoreModel,
+      	     		   ObjectStore) {
+    	
+    	//enable markup
+        parser.parse();
+
+        map = new Map("map", {
+          basemap: "topo",
+          center: [-96.53, 38.374],
+          zoom: 13
+        });
+        
+        //layer
+        var rivers = new FeatureLayer("http://sampleserver3.arcgisonline.com/ArcGIS/rest/services/Hydrography/Watershed173811/MapServer/1", {
+	        mode: FeatureLayer.MODE_ONDEMAND,
+	        outFields:["*"]
+	    });
+	    var waterbodies = new FeatureLayer("http://sampleserver3.arcgisonline.com/ArcGIS/rest/services/Hydrography/Watershed173811/MapServer/0", {
+	        mode: FeatureLayer.MODE_ONDEMAND,
+	        outFields:["*"]
+	    });
+	    
+	  //add the legend
+	      map.on("layers-add-result", function (evt) {
+	        var layerInfo = arrayUtils.map(evt.layers, function (layer, index) {
+	          return {layer:layer.layer, title:layer.layer.name};
+	        });
+	        if (layerInfo.length > 0) {
+	          var legendDijit = new Legend({
+	            map: map,
+	            layerInfos: layerInfo
+	          }, "legendDiv");
+	          legendDijit.startup();
+	        }
+	      });
+
+	      map.addLayers([waterbodies, rivers]);
+
+
+
+        //add the basemap gallery, in this case we'll display maps from ArcGIS.com including bing maps
+        var basemapGallery = new BasemapGallery({
+          showArcGISBasemaps: true,
+          map: map
+        }, "basemapGallery");
+        basemapGallery.startup();
+        
+        basemapGallery.on("error", function(msg) {
+          console.log("basemap gallery error:  ", msg);
+        });
+        
+      //toolbar
+      /*
+        var toolbar = new Toolbar({}, "toolbar");
+        //map tool
+        var button = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Map",
+            showLabel: false,
+            iconClass: "mapToolIcon"
+        });
+        toolbar.addChild(button);
+        
+        //var button1 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+        //    label: "Map",
+        //    showLabel: false,
+        //    iconClass: "mapToolIcon"
+        //});
+        //toolbar.addChild(button1);
+
+        var button2 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Edit",
+            showLabel: false,
+            iconClass: "editToolIcon"
+        });
+        toolbar.addChild(button2);
+
+        var button3 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Print",
+            showLabel: false,
+            iconClass: "printToolIcon"
+        });
+        toolbar.addChild(button3);
+        
+        var button4 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "Feedback",
+            showLabel: false,
+            iconClass: "feedbackToolIcon",
+            onClick: function(){
+                // Do something:
+            	myDialog.show();
+            }
+        });
+        toolbar.addChild(button4);
+        
+        var button5 = new Button({
+            // note: should always specify a label, for accessibility reasons.
+            // Just set showLabel=false if you don't want it to be displayed normally
+            label: "test",
+            showLabel: false,
+            iconClass: "feedbackToolIcon",
+            onClick:function(){
+            	
+            }
+
+        });
+        toolbar.addChild(button5);
+        */
+        
+        //myDialog.show();
+        
+        
+        //tree view
+        
+        var data = [
+        			{ id: "continents", name:"The Continents", type:"root", population: "6 billion"},
+        			{ id: "AF", name:"Africa", type:"continent", population:"900 million", area: "30,221,532 sq km",
+        					timezone: "-1 UTC to +4 UTC", parent: "continents"},
+        				{ id: "EG", name:"Egypt", type:"country", parent: "AF" },
+        				{ id: "KE", name:"Kenya", type:"country", parent: "AF" },
+        					{ id: "Nairobi", name:"Nairobi", type:"city", parent: "KE" },
+        					{ id: "Mombasa", name:"Mombasa", type:"city", parent: "KE" },
+        				{ id: "SD", name:"Sudan", type:"country", parent: "AF" },
+        					{ id: "Khartoum", name:"Khartoum", type:"city", parent: "SD" },
+        			{ id: "AS", name:"Asia", type:"continent", parent: "continents" },
+        				{ id: "CN", name:"China", type:"country", parent: "AS" },
+        				{ id: "IN", name:"India", type:"country", parent: "AS" },
+        				{ id: "RU", name:"Russia", type:"country", parent: "AS" },
+        				{ id: "MN", name:"Mongolia", type:"country", parent: "AS" },
+        			{ id: "OC", name:"Oceania", type:"continent", population:"21 million", parent: "continents"},
+        				{ id: "AU", name:"Australia", type:"country", population:"21 million", parent: "OC"},
+        			{ id: "EU", name:"Europe", type:"continent", parent: "continents" },
+        				{ id: "DE", name:"Germany", type:"country", parent: "EU" },
+        				{ id: "FR", name:"France", type:"country", parent: "EU" },
+        				{ id: "ES", name:"Spain", type:"country", parent: "EU" },
+        				{ id: "IT", name:"Italy", type:"country", parent: "EU" }
+        			];
+        
+        var store = new ItemFileWriteStore({
+            url: "json/countries.json"
+        });
+        
+        var treeModel = new dijit.tree.ForestStoreModel({
+            store: store,
+            query: {
+            	//id:'root'
+                "type": "continent"
+            },
+            rootLabel:'root',
+            
+            //rootId: "root",
+            //rootLabel: "root"
+            //childrenAttrs: ["services"]
+        });
+
+        	// Use two different store types to demonstrate inter-operability.
+        	
+        	
+        	var childrenStore = new Memory({data: data});
+
+        	var childMod  = new ObjectStoreModel({ store: childrenStore, query: {id:"continents"}});
+        	var contTree;
+        	
+
+            // Create the model
+            //var myModel = new ObjectStoreModel({
+            //    store: myStore,
+            //    query: {id: 'world'}
+            //});
+
+            // Create the Tree.
+            //var tree = new Tree({
+            //    model: myModel
+            //});
+            //tree.placeAt("treeOne");
+            //tree.startup();
+            
+               //create a floating pane
+		    pFloatingPane = new FloatingPane({
+		        title: "A floating pane",
+		        resizable: true,
+		        dockable: true,
+		        style: "position:absolute;top:300px;left:50px;width:200px;height:300px;visibility:hidden;z-index:1000;",
+		        id: "pFloatingPane"
+		    },"pFloatingPane");
+		    //dojo.byId("pFloatingPane"));
+		
+		    pFloatingPane.startup();    
+		    
+            //create a floating pane
+		    pFloatingPane2 = new FloatingPane({
+		        title: "A floating pane",
+		        resizable: true,
+		        dockable: true,
+		        style: "position:absolute;top:300px;left:50px;width:200px;height:300px;visibility:hidden;z-index:1000;",
+		        id: "pFloatingPane2"
+		    },"pFloatingPane2");
+		    //dojo.byId("pFloatingPane"));
+		
+		    pFloatingPane2.startup(); 
+            
+        	// No items can be dropped on the 'continents' tree.
+        	contTree  = new Tree({id:"tree06_1", model: childMod, checkItemAcceptance: function(){return true;},
+        	//itemCreator: domNodeToItem,
+        	dndController: dndSource,
+        	//betweenThreshold:5,
+        	checkAcceptance: function (source, nodes) {
+        		return true;
+        	} 
+        	});
+        	contTree.placeAt("divContinents");
+        	//earthTree.startup();
+        	contTree.startup();
+            
+            
+            
+      });
+    </script> 
+  </head> 
+
+  <body class="claro"> 
+    <div data-dojo-type="dijit/layout/BorderContainer" 
+         data-dojo-props="design:'headline', gutters:false" 
+         style="width:100%;height:100%;margin:0;">
+
+      <div id="map" 
+           data-dojo-type="dijit/layout/ContentPane" 
+           data-dojo-props="region:'center'" 
+           style="padding:0;width:100%;height:100%;margin:0;">
+           
+           <div data-dojo-type="dijit/Dialog" data-dojo-id="myDialog" style="width:600px;height:500px;padding: 0px;border-radius:10px;">
+	    		<iframe src="https://docs.google.com/forms/d/1hzA3HbxbFUAO3dkwC9FUVBZ2_FXPxi2IgbDMYRQA1-c/viewform?edit_requested=true" style="width:580px;height:440px;padding: 0px;margin:0px;overflow: auto;"></iframe>
+	    	
+	    	</div>
+	    	
+	    	<div id="logoDiv">    
+			<a id="logo" href="http://www.oneregionforward.org">
+				<!--[if lte IE 8]><img src="image/logo.png" alt="One Region Forward"><![endif]-->
+				
+				<!--[if gt IE 8]><img src="image/logo.svg" alt="One Region Forward"><![endif]-->
+				
+				<!--[if !IE]> -->
+				<img class="logoImg" alt="One Region Forward" src="image/logo.svg"></img>
+				  <!-- <![endif]-->
+			</a>
+		</div>
+
+    	<div style="position:absolute; right:20px; top:10px; z-Index:999; width: 380px;">
+	         <div id="UpperRightCorner">
+		         <div id="menuwrapper" style="position:float; width: 380px;">
+		         	<!-- <span id="toolbar"></span> -->
+					<div id="fancy" data-dojo-type="dijit/Toolbar">
+					    <div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'mapToolIcon', showLabel:false">
+					    	<span>map</span>
+					        <div data-dojo-type="dijit/DropDownMenu" id="navMenu">
+							    <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon',
+							        onClick:function(){pFloatingPane.show();}">Map Content</div>
+							    <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'layerStyleIcon',
+							        onClick:function(){pFloatingPane2.show();}">Layer Style</div>
+							    <!-- 
+							    <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'dijitEditorIcon dijitEditorIconPaste',
+							        onClick:function(){alert('paste!')}">Paste</div>
+							    <div data-dojo-type="dijit/MenuSeparator"></div>
+							    <div data-dojo-type="dijit/PopupMenuItem">
+							        <span>Action</span>
+							        <div data-dojo-type="dijit/DropDownMenu" id="submenu2">
+							            <div data-dojo-type="dijit/MenuItem" data-dojo-props="onClick:function(){alert('nested #1!')}">Nested #1</div>
+							            <div data-dojo-type="dijit/MenuItem" onclick="alert('nested #2!')">Nested #2</div>
+							        </div>
+							    </div>
+							    -->
+							</div>
+					    </div>
+					    <div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'editToolIcon', showLabel:false">
+					        <span>edit</span>
+					        
+					    </div>
+					    <div data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'printToolIcon',showLabel:false" >
+					    	<span>print</span>
+					    </div>
+					    <div data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'feedbackToolIcon',showLabel:false" onclick="myDialog.show();">
+					    	<span>feedback</span>
+					    </div>
+					</div>
+		         	
+		       	 </div>
+		         <div id="holder">
+		         </div>
+	         </div>
+	       </div>
+
+        <div style="position:absolute; right:20px; top:60px; z-Index:999;">
+          <div data-dojo-type="dijit/TitlePane" 
+               data-dojo-props="title:'Switch Basemap', closable:false,  open:false">
+            <div data-dojo-type="dijit/layout/ContentPane" style="width:380px; height:280px; overflow:auto;">
+            <div id="basemapGallery" ></div></div>
+          </div>
+        </div>
+        
+        <div id="pFloatingPane">
+        	<div id="divContinents">
+			</div>
+        </div>
+
+		<div id="pFloatingPane2">
+        	<div id="legendDiv">
+			</div>
+        </div>
+
+      </div>
+    </div>
+  </body> 
+
+  </html>
