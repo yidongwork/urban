@@ -60,13 +60,16 @@
 			};
 	</script>
     <script src="js/dojo/dojo.js"></script> 
+	<script src="js/draw.js"></script>
+	<script src="js/edit.js"></script>
+	<script src="js/print.js"></script>
     <!-- <script src="http://js.arcgis.com/3.6/"></script> -->
     <script> 
       var map;
       
 	  var pFloatingPane,pFloatingPane2;
       
-      var map, toolbar, symbol, geomTask;
+      var map, toolbar,editToolbar, symbol, geomTask;
       
       var printTask,printUrl,printer;
       
@@ -81,11 +84,22 @@
                "esri/tasks/PrintTemplate",
                "esri/request",
                "esri/config",
+			   
+			   	"esri/graphic",
+				"esri/toolbars/draw",
+				"esri/toolbars/edit",
+				"esri/geometry/Polyline",
+				"esri/geometry/Polygon",
+				"esri/symbols/SimpleMarkerSymbol",
+				"esri/symbols/SimpleLineSymbol",
+				"esri/symbols/SimpleFillSymbol",
                
                "dijit/Toolbar", 
                "dijit/form/Button",
                "dojo/parser",
                "dojo/_base/array",
+			   "dojo/on",
+			   "dojo/_base/event",
                
                "dijit/Dialog",
                "dijit/TitlePane",
@@ -123,7 +137,8 @@
                "dijit/form/TextBox",
                "dijit/layout/BorderContainer", 
                "dijit/layout/ContentPane", 
-               
+               "dijit/CheckedMenuItem",
+
                 
                "dijit/DropDownMenu", 
                "dijit/MenuItem", 
@@ -141,11 +156,21 @@
             		   esriRequest,
             		   esriConfig,
             		   
+					   Graphic,
+						Draw,
+						Edit,
+						Polyline,
+						Polygon,
+						SimpleMarkerSymbol, 
+						SimpleLineSymbol, 
+						SimpleFillSymbol,
             		   
             		   Toolbar, 
             		   Button,
             		   parser,
             		   arrayUtils,
+					   on,
+					   event,
 
             		   Dialog,
             		   TitlePane,
@@ -192,7 +217,12 @@
 	        outFields:["*"]
 	    });
 	    
-	    
+		//load toolbar
+		//initDrawToolbar(map);
+		map.on("load", createToolbar);
+		
+		
+
 	    
     	// get print templates from the export web map task
         var printInfo = esriRequest({
@@ -200,13 +230,13 @@
           "content": { "f": "json" }
         });
     	
-    	//printer=new Print({
-    	//	map:map,
-    	//	url:printUrl
-    	//},dom.byId("print_button"));
-    	//printer.startup();
+    	printer=new Print({
+    		map:map,
+    		url:printUrl
+    	},dom.byId("print_button"));
+    	printer.startup();
     	
-        printInfo.then(handlePrintInfo, handleError);
+        //printInfo.then(handlePrintInfo, handleError);
         
         //print info function
         function handlePrintInfo(resp) {
@@ -258,7 +288,7 @@
           }
           
 	    
-	  //add the legend
+		//add the legend
 	      map.on("layers-add-result", function (evt) {
 	        var layerInfo = arrayUtils.map(evt.layers, function (layer, index) {
 	          return {layer:layer.layer, title:layer.layer.name};
@@ -459,9 +489,109 @@
         	//earthTree.startup();
         	contTree.startup();
             
-            
+
+			//register menu items
+			on(dom.byId("pointMenu"), "click", function(e){
+				// handle the event
+				//alert(name);
+				//var tool = name;
+				toolbar.activate(Draw.POINT);
+				map.hideZoomSlider();
+				//activateTool("POINT")
+			});
+			
+			on(dom.byId("polylineMenu"), "click", function(e){
+				// handle the event
+				//alert(name);
+				//var tool = name;
+				toolbar.activate(Draw.POLYLINE);
+				map.hideZoomSlider();
+				//activateTool("POINT")
+			});
+			
+			on(dom.byId("polygonMenu"), "click", function(e){
+				// handle the event
+				//alert(name);
+				//var tool = name;
+				toolbar.activate(Draw.POLYGON);
+				map.hideZoomSlider();
+				//activateTool("POINT")
+			});
+			
+			
+
+
+
+		function createToolbar() {
+		  toolbar = new Draw(map);
+		  toolbar.on("draw-end", addToMap);
+		  
+		  editToolbar = new Edit(map);
+		  
+		  map.graphics.on("click", function(evt) {
+            event.stop(evt);
+            activateEditToolbar(evt.graphic);
+          });
+		  
+		  map.on("click", function(evt){
+            editToolbar.deactivate();
+          });
+
+
+		}
+		
+		function activateEditToolbar(graphic) {
+          var tool = 0;
+          
+          //if (registry.byId("tool_move").checked) {
+            tool = tool | Edit.MOVE; 
+          //}
+          //if (registry.byId("tool_vertices").checked) {
+            tool = tool | Edit.EDIT_VERTICES; 
+          //}
+          //if (registry.byId("tool_scale").checked) {
+            tool = tool | Edit.SCALE; 
+          //}
+          //if (registry.byId("tool_rotate").checked) {
+            tool = tool | Edit.ROTATE; 
+          //}
+          //specify toolbar options        
+          var options = {
+            //allowAddVertices: registry.byId("vtx_ca").checked,
+            //allowDeleteVertices: registry.byId("vtx_cd").checked,
+            //uniformScaling: registry.byId("uniform_scaling").checked
+          };
+		  //alert("asdf");
+          editToolbar.activate(tool, graphic, options);
+        }
+
+
+		function addToMap(evt) {
+		  var symbol;
+		  toolbar.deactivate();
+		  map.showZoomSlider();
+		  switch (evt.geometry.type) {
+			case "point":
+			case "multipoint":
+			  symbol = new SimpleMarkerSymbol();
+			  break;
+			case "polyline":
+			  symbol = new SimpleLineSymbol();
+			  break;
+			default:
+			  symbol = new SimpleFillSymbol();
+			  break;
+		  }
+		  var graphic = new Graphic(evt.geometry, symbol);
+		  map.graphics.add(graphic);
+		}
+		
+		
             
       });
+	  
+		
+		
     </script> 
   </head> 
 
@@ -497,7 +627,8 @@
 		         <div id="menuwrapper" style="position:float; width: 380px;">
 		         	<!-- <span id="toolbar"></span> -->
 					<div id="fancy" data-dojo-type="dijit/Toolbar">
-					    <div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'mapToolIcon', showLabel:false">
+					    <!-- map view menu -->
+						<div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'mapToolIcon', showLabel:false">
 					    	<span>map</span>
 					        <div data-dojo-type="dijit/DropDownMenu" id="navMenu">
 							    <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon',
@@ -518,28 +649,30 @@
 							    -->
 							</div>
 					    </div>
+						<!-- edit menu -->
 					    <div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'editToolIcon', showLabel:false">
 					        <span>edit</span>
 					        <div data-dojo-type="dijit/DropDownMenu" id="editMenu">
 							    <div data-dojo-type="dijit/PopupMenuItem" data-dojo-props="iconClass:'DrawMenuIcon'">
 							        <span>Draw</span>
 							        <div data-dojo-type="dijit/DropDownMenu" id="drawsubmenu">
-							            <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'PointMenuIcon', onClick:function(){alert('nested #1!')}">Point</div>
-							            <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'PolylineMenuIcon'" onclick="alert('nested #2!')">Polyline</div>
-							            <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'PolygonMenuIcon'" onclick="alert('nested #2!')">Polygon</div>
+							            <div id="pointMenu" data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'PointMenuIcon'">Point</div>
+							            <div id="polylineMenu" data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'PolylineMenuIcon'">Polyline</div>
+							            <div id="polygonMenu" data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'PolygonMenuIcon'">Polygon</div>
 							        </div>
 							    </div>
 							    <div data-dojo-type="dijit/PopupMenuItem" data-dojo-props="iconClass:'EditMenuIcon'">
 							        <span>Edit</span>
 							        <div data-dojo-type="dijit/DropDownMenu" id="editsubmenu">
-							            <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'MoveMenuIcon', onClick:function(){alert('nested #1!')}">Move</div>
-							            <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'ScaleMenuIcon'" onclick="alert('nested #2!')">Scale</div>
-							            <div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'RotateMenuIcon'" onclick="alert('nested #2!')">Rotate</div>
+							            <div data-dojo-type="dijit/CheckedMenuItem" data-dojo-props="iconClass:'MoveMenuIcon', checked:'true'">Move</div>
+							            <div data-dojo-type="dijit/CheckedMenuItem" data-dojo-props="iconClass:'ScaleMenuIcon',checked:'true'">Scale</div>
+							            <div data-dojo-type="dijit/CheckedMenuItem" data-dojo-props="iconClass:'RotateMenuIcon',checked:'true'">Rotate</div>
 							        </div>
 							    </div>
 							    
 							</div>
 					    </div>
+						<!-- print menu -->
 					    <div id="print_butto" data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'printToolIcon',showLabel:false" >
 					    	<span>print</span>
 					    	<div data-dojo-type="dijit/DropDownMenu" id="printMenu">
@@ -548,6 +681,7 @@
 							</div>
 					   					    	
 					    </div>
+						<!-- feedback menu -->
 					    <div data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'feedbackToolIcon',showLabel:false" onclick="myDialog.show();">
 					    	<span>feedback</span>
 					    </div>
@@ -579,6 +713,7 @@
 			</div>
         </div>
         
+		
         
 
       </div>

@@ -93,16 +93,16 @@ html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
     }
     .MoveMenuIcon{
     	background:url("../icon/Icons/edit/move.bmp");
-    	width:16px;
-    	height:16px;
+    	width:20px;
+    	height:20px;
     }
     .ScaleMenuIcon{
     	background:url("../icon/Icons/edit/stretch.bmp");
-    	width:16px;
-    	height:16px;
+    	width:20px;
+    	height:20px;
     }
     .RotateMenuIcon{
     	background:url("../icon/Icons/edit/rotate.bmp");
-    	width:16px;
-    	height:16px;
+    	width:20px;
+    	height:20px;
     }
