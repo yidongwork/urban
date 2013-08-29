@@ -39,7 +39,13 @@ require([
     "dojo/_base/window", 
     "dojo/store/Memory",
     "dojox/layout/FloatingPane",
-    "dijit/tree/ObjectStoreModel", 
+    "dijit/tree/ObjectStoreModel",
+
+	"dojo/data/ItemFileWriteStore",
+	"dojox/collections/ArrayList",
+	"dijit/tree/ForestStoreModel",
+	
+	
     "dijit/Tree", 
     "dijit/form/Button",
 	"dojo/store/Observable",
@@ -50,7 +56,7 @@ require([
 	"cbtree/model/TreeStoreModel",
 	"cbtree/store/Hierarchy",
     "dojo/domReady!"
-], function(win, Memory, FloatingPane, ObjectStoreModel, Tree, Button, Observable, ready, dndSource, registry, Tree, ObjectStoreModel,
+], function(win, Memory, FloatingPane, ObjectStoreModel, ItemFileWriteStore, ArrayList, ForestStoreModel,Tree, Button, Observable, ready, dndSource, registry, Tree, ObjectStoreModel,
 		ObjectStore){
 
 	var earth = [	{ id: "earth", name:"The earth", type:"planet", population: "6 billion"}];
@@ -77,6 +83,20 @@ require([
 				{ id: "ES", name:"Spain", type:"country", parent: "EU" },
 				{ id: "IT", name:"Italy", type:"country", parent: "EU" }
 			];
+			
+	var store=new ItemFileWriteStore({
+		url:"json/countries.json"
+	});
+	
+	var treeModel=new ForestStoreModel({
+		store:store,
+		query:{
+			//id:'root'
+			"type":"continent"
+		},
+		rootId:"root",
+		rootLabel:'root'
+	})
 
 	// Use two different store types to demonstrate inter-operability.
 	var childrenStore = new Memory({data: data});
@@ -128,7 +148,7 @@ require([
 
     pFloatingPane.startup();
     
-    earthTree = new Tree({id:"tree06_0", model: parentMod, checkItemAcceptance: acceptItem,
+    earthTree = new Tree({id:"tree06_0", model: childMod, checkItemAcceptance: acceptItem,
 		itemCreator: domNodeToItem,
 		dndController: dndSource,
 		betweenThreshold:5,
