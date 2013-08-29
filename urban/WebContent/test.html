@@ -72,6 +72,8 @@
       var map, toolbar,editToolbar, symbol, geomTask;
       
       var printTask,printUrl,printer;
+	  
+	  var printurl ="http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task";
       
       var app={};
       
@@ -82,6 +84,8 @@
                "esri/dijit/Legend",
                "esri/dijit/Print",
                "esri/tasks/PrintTemplate",
+			   "esri/tasks/PrintTask",
+			   "esri/tasks/PrintParameters",
                "esri/request",
                "esri/config",
 			   
@@ -152,7 +156,11 @@
             		   FeatureLayer,
             		   Legend,
             		   Print,
+
+					   
             		   PrintTemplate,
+					   PrintTask,
+					   PrintParameters,
             		   esriRequest,
             		   esriConfig,
             		   
@@ -230,13 +238,19 @@
           "content": { "f": "json" }
         });
     	
-    	printer=new Print({
-    		map:map,
-    		url:printUrl
-    	},dom.byId("print_button"));
-    	printer.startup();
-    	
-        //printInfo.then(handlePrintInfo, handleError);
+
+
+//************************************************************************************
+//old print 
+//no use
+
+    	//printer=new Print({
+    	//	map:map,
+    	//	url:printUrl
+    	//},dom.byId("print_button"));
+    	//printer.startup();
+		
+		//printInfo.then(handlePrintInfo, handleError);
         
         //print info function
         function handlePrintInfo(resp) {
@@ -276,19 +290,19 @@
 
             // create the print dijit
             app.printer = new Print({
-              "map": map,
-              "templates": templates,
-              url: printUrl
-            }, dom.byId("print_button"));
-            app.printer.startup();
-          }
+				 "map": map,
+				 "templates": templates,
+				 url: printUrl
+				}, dom.byId("print_button"));
+				app.printer.startup();
+		}
 
           function handleError(err) {
             console.log("Something broke: ", err);
           }
           
-	    
-		//add the legend
+//************************************************************************************	    
+//add the legend
 	      map.on("layers-add-result", function (evt) {
 	        var layerInfo = arrayUtils.map(evt.layers, function (layer, index) {
 	          return {layer:layer.layer, title:layer.layer.name};
@@ -305,8 +319,8 @@
 	      map.addLayers([waterbodies, rivers]);
 
 
-
-        //add the basemap gallery, in this case we'll display maps from ArcGIS.com including bing maps
+//************************************************************************************
+//add the basemap gallery, in this case we'll display maps from ArcGIS.com including bing maps
         var basemapGallery = new BasemapGallery({
           showArcGISBasemaps: true,
           map: map
@@ -385,9 +399,10 @@
         */
         
         //myDialog.show();
+		
         
-        
-        //tree view
+//************************************************************************************        
+//tree view
         
         var data = [
         			{ id: "continents", name:"The Continents", type:"root", population: "6 billion"},
@@ -452,7 +467,8 @@
             //tree.placeAt("treeOne");
             //tree.startup();
             
-               //create a floating pane
+//************************************************************************************
+            //create a floating pane
 		    pFloatingPane = new FloatingPane({
 		        title: "A floating pane",
 		        resizable: true,
@@ -489,8 +505,9 @@
         	//earthTree.startup();
         	contTree.startup();
             
+//************************************************************************************
+//register menu items
 
-			//register menu items
 			on(dom.byId("pointMenu"), "click", function(e){
 				// handle the event
 				//alert(name);
@@ -518,8 +535,117 @@
 				//activateTool("POINT")
 			});
 			
+//************************************************************************************	
+//print utils
+		
+		function printResult(result){
+			//dojo.place("<div><a href='" + result.url + "'></a></div>", printForm, "last");
+			//alert(result.url);
+			window.open(result.url);
+		}
+		
+		function printError(error){
+			//dojo.place("<div><a href='" + result.url + "'></a></div>", printForm, "last");
+			alert(error);
+		}
+		
+		//register print buttons
+		
+		//id="A3_Landscape">A3 Landscape</div>
+		//id="A3_Portrait">A3 Portrait</div>
+		//id="A4_Landscape">A4 Landscape</div>
+		//id="A4_Portrait">A4 Portrait</div>
+		//id="A4_Letter_ANSI_A_Landscape">A4 Letter ANSI A Landscape</div>
+		//id="Letter_ANSI_A_Portrait">Letter ANSI A Portrait</div>
+		//id="Tabloid_ANSI_B_Landscape">Tabloid ANSI B Landscape</div>
+		//id="Tabloid_ANSI_B_Portrait">Tabloid ANSI B Portrait</div>
+		
+		var printTask = new PrintTask(printurl);
 			
-
+			
+			var template = new PrintTemplate();
+			  template.exportOptions = {
+				width: 500,
+				height: 400,
+				dpi: 96
+			  };
+			  template.format = "PDF";
+			  //template.layout = "MAP_ONLY";
+			  template.preserveScale = false;
+			  
+			
+		
+		on(dom.byId("A3_Landscape"), "click", function(e){
+			alert("printing");
+			template.layout = "A3 Landscape";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
+		on(dom.byId("A3_Portrait"), "click", function(e){
+			alert("printing");
+			template.layout = "A3 Portrait";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
+		on(dom.byId("A4_Landscape"), "click", function(e){
+			alert("printing");
+			template.layout = "A4 Landscape";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
+		on(dom.byId("A4_Portrait"), "click", function(e){
+			template.layout = "A4 Portrait";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
+		on(dom.byId("A4_Letter_ANSI_A_Landscape"), "click", function(e){
+			alert("printing");
+			template.layout = "A4 Letter ANSI A Landscape";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
+		on(dom.byId("Tabloid_ANSI_B_Landscape"), "click", function(e){
+			alert("printing");
+			template.layout = "Tabloid ANSI B Landscape";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
+		on(dom.byId("Letter_ANSI_A_Portrait"), "click", function(e){
+			alert("printing");
+			template.layout = "Letter ANSI A Portrait";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
+		on(dom.byId("Tabloid_ANSI_B_Portrait"), "click", function(e){
+			alert("printing");
+			template.layout = "Tabloid ANSI B Portrait";
+			var params = new PrintParameters();
+			params.map = map;
+			params.template = template;
+			printTask.execute(params, printResult,printError);
+		});
+		
 
 
 		function createToolbar() {
@@ -627,6 +753,7 @@
 		         <div id="menuwrapper" style="position:float; width: 380px;">
 		         	<!-- <span id="toolbar"></span> -->
 					<div id="fancy" data-dojo-type="dijit/Toolbar">
+					
 					    <!-- map view menu -->
 						<div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'mapToolIcon', showLabel:false">
 					    	<span>map</span>
@@ -649,6 +776,7 @@
 							    -->
 							</div>
 					    </div>
+						
 						<!-- edit menu -->
 					    <div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'editToolIcon', showLabel:false">
 					        <span>edit</span>
@@ -672,11 +800,20 @@
 							    
 							</div>
 					    </div>
+						
 						<!-- print menu -->
 					    <div id="print_butto" data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'printToolIcon',showLabel:false" >
 					    	<span>print</span>
 					    	<div data-dojo-type="dijit/DropDownMenu" id="printMenu">
-							    <div id="print_button" data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'"></div>
+							    <!-- <div id="print_button" data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'">Map Only</div> -->
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="A3_Landscape">A3 Landscape</div>
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="A3_Portrait">A3 Portrait</div>
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="A4_Landscape">A4 Landscape</div>
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="A4_Portrait">A4 Portrait</div>
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="A4_Letter_ANSI_A_Landscape">A4 Letter ANSI A Landscape</div>
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="Letter_ANSI_A_Portrait">Letter ANSI A Portrait</div>
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="Tabloid_ANSI_B_Landscape">Tabloid ANSI B Landscape</div>
+								<div data-dojo-type="dijit/MenuItem" data-dojo-props="iconClass:'contentIcon'" id="Tabloid_ANSI_B_Portrait">Tabloid ANSI B Portrait</div>
 							    
 							</div>
 					   					    	
